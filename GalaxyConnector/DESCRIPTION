@@ -1,11 +1,12 @@
 Package: GalaxyConnector
 Type: Package
-Title: provides Galaxy upload/download
-Version: 0.0.2
-Date: 2015-05-06
-Author: Eric Rasche
+Title: Provides Galaxy Upload/Download
+Version: 0.3
+Date: 2015-09-28
+Author: Eric Rasche,
+  Jelle Scholtalbers
 Maintainer: Eric Rasche <esr@tamu.edu>
-Description: Provides put and get funtions for talking to Galaxy
+Description: Provides functions to interact with a Galaxy instance, e.g. get or put datasests from and to Galaxy.
+  Depends on an external python script included in the rstudio-galaxy directory.
 License: GPL (>= 2)
-Packaged: 2014-09-26 18:58:12 UTC; erasche
-NeedsCompilation: no
+LazyData: TRUE
