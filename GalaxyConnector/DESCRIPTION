@@ -3,10 +3,10 @@ Type: Package
 Title: Provides Galaxy Upload/Download
 Version: 0.3
 Date: 2015-09-28
-Author: Eric Rasche,
-  Jelle Scholtalbers
-Maintainer: Eric Rasche <esr@tamu.edu>
+Author: Jelle Scholtalbers
+Maintainer: Jelle Scholtalbers <scholtal@embl.de>
 Description: Provides functions to interact with a Galaxy instance, e.g. get or put datasests from and to Galaxy.
-  Depends on an external python script included in the rstudio-galaxy directory.
+  Based on the work by Eric Rasche and Björn Gruening
 License: GPL (>= 2)
 LazyData: TRUE
+Imports: stringr, RCurl, jsonlite

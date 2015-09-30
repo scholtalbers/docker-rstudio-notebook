@@ -4,10 +4,12 @@
 \alias{gx_put}
 \title{gx_put}
 \usage{
-gx_put(filename, file_type = "auto")
+gx_put(filepath, filename = "", file_type = "auto")
 }
 \arguments{
-\item{filename,}{Path to file}
+\item{filepath,}{Path to file}
+
+\item{filename,}{Name of the file to display in Galaxy}
 
 \item{file_type,}{auto-detect otherwise}
 }

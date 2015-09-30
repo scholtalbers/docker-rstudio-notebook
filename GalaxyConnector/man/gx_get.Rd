@@ -4,12 +4,14 @@
 \alias{gx_get}
 \title{gx_get}
 \usage{
-gx_get(file_id, create = FALSE)
+gx_get(file_id, create = FALSE, force = FALSE)
 }
 \arguments{
 \item{file_id,}{ID number}
 
 \item{create,}{if TRUE, create import directory if it does not exist}
+
+\item{force,}{if TRUE, will download the file even if it already exists locally}
 }
 \description{
 Download a dataset from the current Galaxy history by ID #

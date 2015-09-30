@@ -34,9 +34,17 @@ gx_init <- function(API_KEY=NULL, GALAXY_URL=NULL, HISTORY_ID=NULL,
     if(is.na(GALAXY_URL)){
       stop("You have not specified a Galaxy Url, please do so.")
     }
-  }else{
-    Sys.setenv('GX_URL'=GALAXY_URL)
   }
+
+  # horrible method to check for correct url construction, please fix
+  if ( str_sub(GALAXY_URL,-1) != '/' ){
+    GALAXY_URL <- paste0(GALAXY_URL,'/')
+  }
+  if( str_sub(GALAXY_URL,start=0,4) != 'http'){
+    GALAXY_URL <- paste0('http://',GALAXY_URL)
+    message(cat("Galaxy url was not prepended by the protocol, I constructed this url:",GALAXY_URL))
+  }
+  Sys.setenv('GX_URL'=GALAXY_URL)
 
   gx_set_import_directory(IMPORT_DIRECTORY,create=TRUE)
   gx_set_tmp_directory(TMP_DIRECTORY,create=TRUE)
@@ -56,7 +64,7 @@ directory_exists <- function(directory,create='FALSE'){
     if(create){
       dir.create(directory,recursive=TRUE)
     }else{
-      stop(paste(directory, 'does not exist. You can specify create=TRUE'))
+      stop(paste0(directory, 'does not exist. You can specify create=TRUE'))
     }
   }
   return(directory)
@@ -128,14 +136,59 @@ gx_set_tmp_directory <- function(TMP_DIRECTORY=NULL,create=FALSE){
 #'
 #' This function uploads a dataset to the current Galaxy history
 #'
-#' @param filename, Path to file
+#' @param filepath, Path to file
+#' @param filename, Name of the file to display in Galaxy
 #' @param file_type, auto-detect otherwise
 
-gx_put <- function(filename, file_type="auto"){
-  command <- paste(
-    Sys.getenv('GX_PYTHON_BIN'), Sys.getenv('GX_PYTHON_FILE'),
-    "--action", "put", "--argument", filename, "--filetype", file_type)
-  system(command)
+gx_put <- function(filepath, filename='', file_type="auto"){
+  api_key = Sys.getenv('GX_API_KEY')
+  url <- paste0(Sys.getenv('GX_URL'),'api/tools/?api_key=',api_key)
+  history_id = Sys.getenv('GX_HISTORY_ID')
+
+  inputs_json <- sprintf(
+    '{"files_0|NAME":"%s",
+    "files_0|type":"upload_dataset",
+    "dbkey": "?",
+    "file_type":"%s",
+    "ajax_upload":"true"}',filename,file_type
+  )
+  params=list(
+      'files_0|file_data'=fileUpload(filepath),
+      key=api_key,
+      tool_id='upload1',
+      history_id=history_id,
+      inputs=inputs_json)
+
+  response <- fromJSON(postForm(url, .params=params,
+           .opts = list(verbose = FALSE, header = TRUE)
+           ))
+  response$jobs
+}
+
+#' gx_list_history_datasets
+#'
+#' List datasets from the current history id
+
+gx_list_history_datasets <- function(){
+  hist_datasets <- fromJSON(
+    paste0(Sys.getenv('GX_URL'),'api/histories/',Sys.getenv('GX_HISTORY_ID'),'/contents?key=',Sys.getenv('GX_API_KEY'))
+  )
+  return(hist_datasets)
+}
+
+#' gx_show_dataset
+#'
+#' Show dataset info based
+#'
+#' @param dataset_encoded_id, the encoded dataset id which you can get from gx_list_history_datasets()
+
+gx_show_dataset <- function(dataset_encoded_id){
+  return(fromJSON(paste0(
+    Sys.getenv('GX_URL'),
+    'api/datasets/',
+    dataset_encoded_id,
+    '/?key=',Sys.getenv('GX_API_KEY')
+  )))
 }
 
 #' gx_get
@@ -144,13 +197,26 @@ gx_put <- function(filename, file_type="auto"){
 #'
 #' @param file_id, ID number
 #' @param create, if TRUE, create import directory if it does not exist
+#' @param force, if TRUE, will download the file even if it already exists locally
 
-gx_get <- function(file_id,create=FALSE){
+gx_get <- function(file_id,create=FALSE,force=FALSE){
   file_path = file.path(gx_get_import_directory(create=create), file_id)
-  command <- paste(
-    Sys.getenv('GX_PYTHON_BIN'), Sys.getenv('GX_PYTHON_FILE'),
-    "--action", "get", "--argument", file_id, "--file-path", file_path)
-  system(command)
+  if( !force && file.exists(file_path)){
+    message("You already downloaded this file, use force=TRUE to overwrite")
+    return(file_path)
+  }
+  hist_datasets <- gx_list_history_datasets()
+  encoded_dataset_id <- hist_datasets[hist_datasets$hid==file_id,'id']
+  dataset_details <- gx_show_dataset(encoded_dataset_id)
+
+  if( dataset_details$state == 'ok' ){
+    url <- paste0(
+      Sys.getenv('GX_URL'),'api/histories/',Sys.getenv('GX_HISTORY_ID'),
+      '/contents/',encoded_dataset_id,'/display',
+      '?to_ext=',dataset_details$extension,
+      '&key=',Sys.getenv('GX_API_KEY'))
+    download.file(url,file_path,quiet=TRUE)
+  }
   return(file_path)
 }
 
@@ -163,8 +229,8 @@ gx_get <- function(file_id,create=FALSE){
 
 gx_save <- function(session_name="workspace"){
   tmp_dir <- gx_get_tmp_directory()
-  workspace <- paste(tmp_dir,session_name,".RData",sep="")
-  hist <- paste(tmp_dir,session_name,".RHistory",sep="")
+  workspace <- paste0(tmp_dir,session_name,".RData")
+  hist <- paste0(tmp_dir,session_name,".RHistory")
   save.image(workspace)
   savehistory(hist)
   gx_put(workspace)
@@ -191,7 +257,10 @@ gx_restore <- function(rdata_id,rhistory_id){
 #' Set the current history to the last updated in Galaxy
 #'
 gx_latest_history <- function(){
-  gx_list_histories()
+  hist_obj <- fromJSON(
+      paste0(Sys.getenv('GX_URL'),'api/histories/most_recently_used/?key=',Sys.getenv('GX_API_KEY'))
+  )
+  return(hist_obj$id)
 }
 
 #' gx_switch_history
@@ -211,14 +280,5 @@ gx_switch_history <- function(HISTORY_ID){
 #' List all Galaxy histories of the current user
 
 gx_list_histories <- function(){
-  read.delim(
-    text=system2(
-      Sys.getenv('GX_PYTHON_BIN'),
-      args=paste(
-        Sys.getenv('GX_PYTHON_FILE'),
-        "--action",
-        "histories"
-      ),
-      stdout=TRUE)
-  )
+  return( fromJSON(paste0(Sys.getenv('GX_URL'),'api/histories/?key=',Sys.getenv('GX_API_KEY')) ))
 }

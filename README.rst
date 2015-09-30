@@ -1,55 +1,59 @@
 GalaxyConnector
 ---------------
 
+About:
+======
+
+This package will allow you to interact with any Galaxy instance for which you 
+have a API Key. You can retrieve and upload files from and to Galaxy and save 
+and restore your R Session in a Galaxy history.
+To install, first download the .tar.gz
+
 End user:
 =========
 
-To download and upload your datasets from and to Galaxy, you first need to
-tell the package what your Galaxy API Key is and what instance you will work
-with. You can find the API key under user preference in the
-Galaxy instance.
-For this run :code:`gx_set_env(API_KEY,GALAXY_URL='usegalaxy.org')`. This will
+First load the package: :code:`library(GalaxyConnector)`
+
+Then you configure the package by setting your Galaxy API Key and the Galaxy
+Instance to work with.
+You can find the API key under user preference in the Galaxy instance.
+
+Run :code:`gx_init(your_Galaxy_API_Key,GALAXY_URL='usegalaxy.org')`. This will
 set it up for the **current session** only (see below for more information).
 
 You can now run :code:`gx_list_histories()` to list all of your Galaxy
-histories. Pick a history and set this as your current history by running
-:code:`gx_switch_history(HISTORY_ID)`. Now you can run :code:`gx_get(1)` to
-get the first dataset you have in this history. It will show you where the
-file has been copied to, so you can run
-:code:`gx_put(/tmp/<user>/<history_id>/1)` to copy it back into Galaxy.
+histories. Pick a history and set this as your current (default is latest)
+history by running :code:`gx_switch_history(HISTORY_ID)`.
 
-Other functions you can discover from the man pages, all functions are
-prefixed with `gx_`
+With :code:`gx_get(1)` you get the first dataset from your Galaxy 
+history and shows you where it has been put. 
+
+By running :code:`gx_put(/tmp/some_file.txt)` you will upload a file back into
+Galaxy.
+
+Other functions you can discover from the man pages, all functions are prefixed
+with `gx_`
 
 Setup API Key for all sessions:
 +++++++++++++++++++++++++++++++
 
-If you do not want to run gx_set_env each time you want to communicate with
-Galaxy, you can set the variables in your ~/.Renviron file. e.g.
+If you do not want to run gx_init each time you want to communicate with Galaxy,
+you can set the variables in your ~/.Renviron file. e.g.
 ::
 
   GX_API_KEY=D1g1tsAndcharact3rs    # Your Galaxy API Key
   GX_URL=http://usegalaxy.org       # The Galaxy instance url
-  GX_HISTORY_ID=a93656117103148     # The initial/default Galaxy History
-  # Other variables that the administrator generally sets
-  # GX_PYTHON_FILE=/usr/local/bin/galaxy.py # Location of the python script
-  # GX_PYTHON_BIN=python                    # Python binary with bioblend
-                                            # installed
 
 Admin:
 ======
 
-You will need to put the galaxy.py somewhere accessible by all RStudio users.
-Then in the RStudio configuration (`/etc/rstudio/rsession-profile`) set the
-system environment variable :code:`GX_PYTHON_FILE` to this location e.g.
-:code:`/usr/local/bin/galaxy.py`
-In addition, you will need to ensure the python executable used, has the
-package bioblend installed (:code:`pip install bioblend`). You then set the
-:code:`GX_PYTHON_BIN` variable to that python version.
-Since this package uses environment variables for the settings, you can
-pre-set them for your users.
-E.g. set GX_URL=https://test.galaxyproject.org/
+For now this package uses environment variables for the settings, so you can set
+a default Galaxy instance, e.g. to your local instance. For this set the same
+keys as above in for example RStudio's configuration
+`/etc/rstudio/rsession-profile`.
 
-Credits
-=======
-This is based on the work by Eric Rasche and Bjoern Gruening - see the fork origin: https://github.com/erasche/docker-rstudio-notebook
+Credits:
+========
+
+This is based on the work by Eric Rasche and Bjoern Gruening - see the fork 
+origin: https://github.com/erasche/docker-rstudio-notebook
