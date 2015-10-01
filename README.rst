@@ -7,7 +7,15 @@ About:
 This package will allow you to interact with any Galaxy instance for which you 
 have a API Key. You can retrieve and upload files from and to Galaxy and save 
 and restore your R Session in a Galaxy history.
-To install, first download the .tar.gz
+
+Install:
+========
+
+To install, first download the GalaxyConnector_0.3.tar.gz and install through
+:code:`install.packages('GalaxyConnector_0.3.tar.gz',type='source',
+repos=NULL)`.
+You may need to install some missing dependencies manually.
+
 
 End user:
 =========

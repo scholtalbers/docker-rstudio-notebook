@@ -10,3 +10,4 @@ Description: Provides functions to interact with a Galaxy instance, e.g. get or 
 License: GPL (>= 2)
 LazyData: TRUE
 Imports: stringr, RCurl, jsonlite
+Depends: R (>= 3.2.0)

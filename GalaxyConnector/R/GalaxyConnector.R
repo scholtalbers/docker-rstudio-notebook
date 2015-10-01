@@ -10,6 +10,9 @@
 
 gx_init <- function(API_KEY=NULL, GALAXY_URL=NULL, HISTORY_ID=NULL,
                        IMPORT_DIRECTORY=NULL, TMP_DIRECTORY=NULL){
+  library("jsonlite");
+  library("RCurl");
+  library("stringr");
   if(is.null(API_KEY)){
     API_KEY=Sys.getenv('GX_API_KEY',unset=NA)
     if(is.na(API_KEY)){
@@ -18,24 +21,13 @@ gx_init <- function(API_KEY=NULL, GALAXY_URL=NULL, HISTORY_ID=NULL,
   }else{
     Sys.setenv('GX_API_KEY'=API_KEY)
   }
-  if(is.null(HISTORY_ID)){
-    HISTORY_ID=Sys.getenv('GX_HISTORY_ID',unset=NA)
-    if(is.na(HISTORY_ID)){
-      # set to latest history
-      HISTORY_ID=gx_switch_history(gx_list_histories[1,1])
-      message(cat("You have not specified a history id, run gx_list_histories to see which are available. ",
-                    "Current history is set to",HISTORY_ID))
-    }
-  }else{
-    Sys.setenv('GX_HISTORY_ID'=HISTORY_ID)
-  }
+
   if(is.null(GALAXY_URL)){
     GALAXY_URL=Sys.getenv('GX_URL',unset=NA)
     if(is.na(GALAXY_URL)){
       stop("You have not specified a Galaxy Url, please do so.")
     }
   }
-
   # horrible method to check for correct url construction, please fix
   if ( str_sub(GALAXY_URL,-1) != '/' ){
     GALAXY_URL <- paste0(GALAXY_URL,'/')
@@ -45,6 +37,19 @@ gx_init <- function(API_KEY=NULL, GALAXY_URL=NULL, HISTORY_ID=NULL,
     message(cat("Galaxy url was not prepended by the protocol, I constructed this url:",GALAXY_URL))
   }
   Sys.setenv('GX_URL'=GALAXY_URL)
+
+  if(is.null(HISTORY_ID)){
+    HISTORY_ID=Sys.getenv('GX_HISTORY_ID',unset=NA)
+    if(is.na(HISTORY_ID)){
+      # set to latest history
+      histories <- gx_list_histories()
+      HISTORY_ID=gx_switch_history(histories$id[1])
+      message(cat("You have not specified a history id, run gx_list_histories to see which are available. ",
+                    "Current history is set to",HISTORY_ID))
+    }
+  }else{
+    Sys.setenv('GX_HISTORY_ID'=HISTORY_ID)
+  }
 
   gx_set_import_directory(IMPORT_DIRECTORY,create=TRUE)
   gx_set_tmp_directory(TMP_DIRECTORY,create=TRUE)
