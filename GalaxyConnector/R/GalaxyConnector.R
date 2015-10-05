@@ -234,8 +234,8 @@ gx_get <- function(file_id,create=FALSE,force=FALSE){
 
 gx_save <- function(session_name="workspace"){
   tmp_dir <- gx_get_tmp_directory()
-  workspace <- paste0(tmp_dir,session_name,".RData")
-  hist <- paste0(tmp_dir,session_name,".RHistory")
+  workspace <- file.path(tmp_dir,paste0(session_name,".RData"))
+  hist <- file.path(tmp_dir,paste0(session_name,".RHistory"))
   save.image(workspace)
   savehistory(hist)
   gx_put(workspace)
@@ -260,7 +260,7 @@ gx_restore <- function(rdata_id,rhistory_id){
 #' gx_latest_history
 #'
 #' Set the current history to the last updated in Galaxy
-#'
+
 gx_latest_history <- function(){
   hist_obj <- fromJSON(
       paste0(Sys.getenv('GX_URL'),'api/histories/most_recently_used/?key=',Sys.getenv('GX_API_KEY'))
@@ -279,6 +279,20 @@ gx_switch_history <- function(HISTORY_ID){
   gx_set_tmp_directory(create=TRUE)
 }
 
+#' gx_current_history
+#'
+#' Show the name of the current history
+#'
+#' @param full, if True, return a list with some history details
+
+gx_current_history <- function(full=FALSE){
+  histories <- gx_list_histories()
+  if (full){
+    return(histories[histories$id==Sys.getenv('GX_HISTORY_ID'),])
+  }else{
+    return(histories$name[histories$id==Sys.getenv('GX_HISTORY_ID')])
+  }
+}
 
 #' gx_list_histories
 #'
