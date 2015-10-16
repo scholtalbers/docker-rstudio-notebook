@@ -1,6 +1,17 @@
+library("jsonlite");
+library("RCurl");
+library("stringr");
+
+GX_API_KEY <- Sys.getenv('GX_API_KEY', unset=NA)
+GX_URL <- Sys.getenv('GX_URL', unset=NA)
+GX_HISTORY_ID <- Sys.getenv('GX_HISTORY_ID', unset=NA)
+GX_IMPORT_DIRECTORY <- Sys.getenv('GX_IMPORT_DIRECTORY', unset=NA)
+GX_TMP_DIRECTORY <- Sys.getenv('GX_TMP_DIRECTORY', unset=NA)
+
 #' gx_init
 #'
-#' Function that wraps the setenv calls to set the appropriate Galaxy environment variables
+#' Function that graps any environment/default settings to set for this sessions
+#' to use.
 #'
 #' @param API_KEY, to access your Galaxy account
 #' @param GALAXY_URL, the Galaxy instance to work with
@@ -10,47 +21,35 @@
 
 gx_init <- function(API_KEY=NULL, GALAXY_URL=NULL, HISTORY_ID=NULL,
                        IMPORT_DIRECTORY=NULL, TMP_DIRECTORY=NULL){
-  library("jsonlite");
-  library("RCurl");
-  library("stringr");
-  if(is.null(API_KEY)){
-    API_KEY=Sys.getenv('GX_API_KEY',unset=NA)
-    if(is.na(API_KEY)){
-      stop("You have not set your API Key")
-    }
-  }else{
-    Sys.setenv('GX_API_KEY'=API_KEY)
+  if(!is.null(API_KEY)){
+    GX_API_KEY <<- API_KEY
+  } else if (is.null(API_KEY) && is.na(GX_API_KEY)){
+    stop("You have not set your API Key")
   }
 
-  if(is.null(GALAXY_URL)){
-    GALAXY_URL=Sys.getenv('GX_URL',unset=NA)
-    if(is.na(GALAXY_URL)){
+  if(!is.null(GALAXY_URL)){
+    GX_URL <<- GALAXY_URL
+  } else if (is.null(GALAXY_URL) && is.na(GX_URL)){
       stop("You have not specified a Galaxy Url, please do so.")
-    }
   }
   # horrible method to check for correct url construction, please fix
-  if ( str_sub(GALAXY_URL,-1) != '/' ){
-    GALAXY_URL <- paste0(GALAXY_URL,'/')
+  if ( str_sub(GX_URL,-1) != '/' ){
+    GX_URL <<- paste0(GX_URL,'/')
   }
-  if( str_sub(GALAXY_URL,start=0,4) != 'http'){
-    GALAXY_URL <- paste0('http://',GALAXY_URL)
-    message(cat("Galaxy url was not prepended by the protocol, I constructed this url:",GALAXY_URL))
+  if( str_sub(GX_URL,start=0,4) != 'http'){
+    GX_URL <<- paste0('http://',GX_URL)
+    message(cat("Galaxy url was not prepended by the protocol, I constructed this url:",GX_URL))
   }
-  Sys.setenv('GX_URL'=GALAXY_URL)
 
-  if(is.null(HISTORY_ID)){
-    HISTORY_ID=Sys.getenv('GX_HISTORY_ID',unset=NA)
-    if(is.na(HISTORY_ID)){
+  if(!is.null(HISTORY_ID)){
+    GX_HISTORY_ID <<- HISTORY_ID
+  }else if (is.null(HISTORY_ID) && is.na(GX_HISTORY_ID)){
       # set to latest history
       histories <- gx_list_histories()
-      HISTORY_ID=gx_switch_history(histories$id[1])
+      gx_switch_history(histories$id[1])
       message(cat("You have not specified a history id, run gx_list_histories to see which are available. ",
-                    "Current history is set to",HISTORY_ID))
-    }
-  }else{
-    Sys.setenv('GX_HISTORY_ID'=HISTORY_ID)
+                    "Current history is set to",histories$name[1]))
   }
-
   gx_set_import_directory(IMPORT_DIRECTORY,create=TRUE)
   gx_set_tmp_directory(TMP_DIRECTORY,create=TRUE)
 }
@@ -82,12 +81,10 @@ directory_exists <- function(directory,create='FALSE'){
 #' @param create, if TRUE, create import directory if it does not exist
 
 gx_get_import_directory <- function(create=FALSE){
-  if(is.na(Sys.getenv('GX_IMPORT_DIRECTORY',unset=NA))){
+  if(is.na(GX_IMPORT_DIRECTORY)){
     gx_set_import_directory(create=create)
   }
-  import_directory=Sys.getenv('GX_IMPORT_DIRECTORY')
-  history = Sys.getenv('GX_HISTORY_ID')
-  history_import_directory = file.path(import_directory, history)
+  history_import_directory <- file.path(GX_IMPORT_DIRECTORY, GX_HISTORY_ID)
   return(directory_exists(history_import_directory,create=create))
 }
 
@@ -101,10 +98,10 @@ gx_get_import_directory <- function(create=FALSE){
 gx_set_import_directory <- function(IMPORT_DIRECTORY=NULL,create=FALSE){
   if(is.null(IMPORT_DIRECTORY)){
     username <- Sys.getenv('RSTUDIO_USER_IDENTITY')
-    IMPORT_DIRECTORY=file.path("/tmp",username,"galaxy_import")
+    IMPORT_DIRECTORY <- file.path("/tmp",username,"galaxy_import")
   }
   directory_exists(IMPORT_DIRECTORY,create=create)
-  Sys.setenv('GX_IMPORT_DIRECTORY'=IMPORT_DIRECTORY)
+  GX_IMPORT_DIRECTORY <<- IMPORT_DIRECTORY
 }
 
 
@@ -115,10 +112,10 @@ gx_set_import_directory <- function(IMPORT_DIRECTORY=NULL,create=FALSE){
 #' @param create, if TRUE, create import directory if it does not exist
 
 gx_get_tmp_directory <- function(create=FALSE){
-  if(is.na(Sys.getenv('GX_TMP_DIRECTORY',unset=NA))){
+  if(is.na(GX_TMP_DIRECTORY)){
     gx_set_tmp_directory(create=create)
   }
-  return(directory_exists(Sys.getenv('GX_TMP_DIRECTORY'),create=create))
+  return(directory_exists(GX_TMP_DIRECTORY,create=create))
 }
 
 #' gx_set_tmp_directory
@@ -133,7 +130,7 @@ gx_set_tmp_directory <- function(TMP_DIRECTORY=NULL,create=FALSE){
     TMP_DIRECTORY=file.path(gx_get_import_directory(create=create),"tmp")
   }
   directory_exists(TMP_DIRECTORY,create=create)
-  Sys.setenv('GX_TMP_DIRECTORY'=TMP_DIRECTORY)
+  GX_TMP_DIRECTORY <<- TMP_DIRECTORY
 }
 
 
@@ -146,9 +143,7 @@ gx_set_tmp_directory <- function(TMP_DIRECTORY=NULL,create=FALSE){
 #' @param file_type, auto-detect otherwise
 
 gx_put <- function(filepath, filename='', file_type="auto"){
-  api_key = Sys.getenv('GX_API_KEY')
-  url <- paste0(Sys.getenv('GX_URL'),'api/tools/?api_key=',api_key)
-  history_id = Sys.getenv('GX_HISTORY_ID')
+  url <- paste0(GX_URL,'api/tools/?api_key=',api_key)
 
   inputs_json <- sprintf(
     '{"files_0|NAME":"%s",
@@ -159,9 +154,9 @@ gx_put <- function(filepath, filename='', file_type="auto"){
   )
   params=list(
       'files_0|file_data'=fileUpload(filepath),
-      key=api_key,
+      key=GX_API_KEY,
       tool_id='upload1',
-      history_id=history_id,
+      history_id=GX_HISTORY_ID,
       inputs=inputs_json)
 
   response <- fromJSON(postForm(url, .params=params,
@@ -176,7 +171,7 @@ gx_put <- function(filepath, filename='', file_type="auto"){
 
 gx_list_history_datasets <- function(){
   hist_datasets <- fromJSON(
-    paste0(Sys.getenv('GX_URL'),'api/histories/',Sys.getenv('GX_HISTORY_ID'),'/contents?key=',Sys.getenv('GX_API_KEY'))
+    paste0(GX_URL,'api/histories/',GX_HISTORY_ID,'/contents?key=',GX_API_KEY)
   )
   return(hist_datasets)
 }
@@ -189,10 +184,10 @@ gx_list_history_datasets <- function(){
 
 gx_show_dataset <- function(dataset_encoded_id){
   return(fromJSON(paste0(
-    Sys.getenv('GX_URL'),
+    GX_URL,
     'api/datasets/',
     dataset_encoded_id,
-    '/?key=',Sys.getenv('GX_API_KEY')
+    '/?key=',GX_API_KEY
   )))
 }
 
@@ -216,10 +211,10 @@ gx_get <- function(file_id,create=FALSE,force=FALSE){
 
   if( dataset_details$state == 'ok' ){
     url <- paste0(
-      Sys.getenv('GX_URL'),'api/histories/',Sys.getenv('GX_HISTORY_ID'),
+      GX_URL,'api/histories/',GX_HISTORY_ID,
       '/contents/',encoded_dataset_id,'/display',
       '?to_ext=',dataset_details$extension,
-      '&key=',Sys.getenv('GX_API_KEY'))
+      '&key=',GX_API_KEY)
     download.file(url,file_path,quiet=TRUE)
   }
   return(file_path)
@@ -263,7 +258,7 @@ gx_restore <- function(rdata_id,rhistory_id){
 
 gx_latest_history <- function(){
   hist_obj <- fromJSON(
-      paste0(Sys.getenv('GX_URL'),'api/histories/most_recently_used/?key=',Sys.getenv('GX_API_KEY'))
+      paste0(GX_URL,'api/histories/most_recently_used/?key=',GX_API_KEY)
   )
   return(hist_obj$id)
 }
@@ -275,7 +270,7 @@ gx_latest_history <- function(){
 #' @param HISTORY_ID, the Galaxy history id to work on
 
 gx_switch_history <- function(HISTORY_ID){
-  Sys.setenv('GX_HISTORY_ID'=HISTORY_ID)
+  GX_HISTORY_ID <<- HISTORY_ID
   gx_set_tmp_directory(create=TRUE)
 }
 
@@ -288,9 +283,9 @@ gx_switch_history <- function(HISTORY_ID){
 gx_current_history <- function(full=FALSE){
   histories <- gx_list_histories()
   if (full){
-    return(histories[histories$id==Sys.getenv('GX_HISTORY_ID'),])
+    return(histories[histories$id==GX_HISTORY_ID,])
   }else{
-    return(histories$name[histories$id==Sys.getenv('GX_HISTORY_ID')])
+    return(histories$name[histories$id==GX_HISTORY_ID])
   }
 }
 
@@ -299,5 +294,5 @@ gx_current_history <- function(full=FALSE){
 #' List all Galaxy histories of the current user
 
 gx_list_histories <- function(){
-  return( fromJSON(paste0(Sys.getenv('GX_URL'),'api/histories/?key=',Sys.getenv('GX_API_KEY')) ))
+  return( fromJSON(paste0(GX_URL,'api/histories/?key=',GX_API_KEY) ))
 }
