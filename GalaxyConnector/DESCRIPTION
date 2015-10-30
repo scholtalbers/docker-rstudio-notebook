@@ -6,8 +6,8 @@ Date: 2015-09-28
 Author: Jelle Scholtalbers
 Maintainer: Jelle Scholtalbers <scholtal@embl.de>
 Description: Provides functions to interact with a Galaxy instance, e.g. get or put datasests from and to Galaxy.
-  Based on the work by Eric Rasche and Björn Gruening
+  Based on the work by Eric Rasche and Björn Gruening.
 License: GPL (>= 2)
 LazyData: TRUE
 Imports: stringr, RCurl, jsonlite
-Depends: R (>= 3.2.0)
+Depends: R (>= 3.2)

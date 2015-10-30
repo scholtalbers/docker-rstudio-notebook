@@ -19,6 +19,7 @@ gx_init(API_KEY = NULL, GALAXY_URL = NULL, HISTORY_ID = NULL,
 \item{TMP_DIRECTORY,}{default '/tmp/<username>/galaxy_import/tmp'}
 }
 \description{
-Function that wraps the setenv calls to set the appropriate Galaxy environment variables
+Function that graps any environment/default settings to set for this session
+to use.
 }
 

@@ -1,1 +1,7 @@
 exportPattern("^[[:alpha:]]+")
+
+importFrom("jsonlite",fromJSON)
+importFrom("RCurl",fileUpload)
+importFrom("RCurl",postForm)
+importFrom("stringr",str_sub)
+importFrom("utils",download.file)
