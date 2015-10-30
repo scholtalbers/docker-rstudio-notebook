@@ -26,12 +26,12 @@ Then you configure the package by setting your Galaxy API Key and the Galaxy
 Instance to work with.
 You can find the API key under user preference in the Galaxy instance.
 
-Run :code:`gx_init(your_Galaxy_API_Key,GALAXY_URL='usegalaxy.org')`. This will
+Run :code:`gx_init('your_Galaxy_API_Key',GALAXY_URL='usegalaxy.org')`. This will
 set it up for the **current session** only (see below for more information).
 
 You can now run :code:`gx_list_histories()` to list all of your Galaxy
 histories. Pick a history and set this as your current (default is latest)
-history by running :code:`gx_switch_history(HISTORY_ID)`.
+history by running :code:`gx_switch_history('HISTORY_ID')`.
 
 With :code:`gx_get(1)` you get the first dataset from your Galaxy 
 history and shows you where it has been put. 
@@ -56,8 +56,8 @@ Admin:
 ======
 
 For now this package uses environment variables for the settings, so you can set
-a default Galaxy instance, e.g. to your local instance. For this set the same
-keys as above in for example RStudio's configuration
+a default Galaxy instance, e.g. to your local instance. To set the defaults set
+the same keys as above in e.g. the RStudio's configuration
 `/etc/rstudio/rsession-profile`.
 
 Credits:
