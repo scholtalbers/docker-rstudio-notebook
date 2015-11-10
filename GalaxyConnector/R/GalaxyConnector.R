@@ -155,7 +155,7 @@ gx_set_tmp_directory <- function(TMP_DIRECTORY=NULL,create=FALSE){
 
 gx_put <- function(filepath, filename='', file_type="auto"){
   check_url_and_key()
-  url <- paste0(pkg.env$GX_URL,'api/tools/?api_key=',pkg.env$GX_API_KEY)
+  url <- paste0(pkg.env$GX_URL,'api/tools?api_key=',pkg.env$GX_API_KEY)
 
   inputs_json <- sprintf(
     '{"files_0|NAME":"%s",
@@ -201,7 +201,7 @@ gx_show_dataset <- function(dataset_encoded_id){
     pkg.env$GX_URL,
     'api/datasets/',
     dataset_encoded_id,
-    '/?key=',pkg.env$GX_API_KEY
+    '?key=',pkg.env$GX_API_KEY
   )))
 }
 
@@ -271,14 +271,14 @@ gx_restore <- function(rdata_id,rhistory_id){
 
 #' gx_latest_history
 #'
-#' Set the current history to the last updated in Galaxy
+#' Uses the Galaxy API histories/most_recently_used to get the last updated history
 
 gx_latest_history <- function(){
   check_url_and_key()
   hist_obj <- fromJSON(
-      paste0(pkg.env$GX_URL,'api/histories/most_recently_used/?key=',pkg.env$GX_API_KEY)
+      paste0(pkg.env$GX_URL,'api/histories/most_recently_used?key=',pkg.env$GX_API_KEY)
   )
-  return(hist_obj$id)
+  return(hist_obj)
 }
 
 #' gx_switch_history
@@ -315,5 +315,5 @@ gx_current_history <- function(full=FALSE){
 
 gx_list_histories <- function(){
   check_url_and_key()
-  return( fromJSON(paste0(pkg.env$GX_URL,'api/histories/?key=',pkg.env$GX_API_KEY) ))
+  return( fromJSON(paste0(pkg.env$GX_URL,'api/histories?key=',pkg.env$GX_API_KEY) ))
 }

@@ -7,6 +7,6 @@
 gx_latest_history()
 }
 \description{
-Set the current history to the last updated in Galaxy
+Uses the Galaxy API histories/most_recently_used to get the last updated history
 }
 

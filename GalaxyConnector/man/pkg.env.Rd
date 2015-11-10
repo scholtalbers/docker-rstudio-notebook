@@ -5,7 +5,7 @@
 \alias{pkg.env}
 \title{pkg.env
 private environment}
-\format{\preformatted{<environment: 0x7f9b0cb85008> 
+\format{\preformatted{<environment: 0x7fe28e8c7f08> 
 }}
 \usage{
 pkg.env
