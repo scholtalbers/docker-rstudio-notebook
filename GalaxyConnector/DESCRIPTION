@@ -1,7 +1,7 @@
 Package: GalaxyConnector
 Type: Package
 Title: Provides Galaxy Upload/Download
-Version: 0.3
+Version: 0.3.1
 Date: 2015-09-28
 Author: Jelle Scholtalbers
 Maintainer: Jelle Scholtalbers <scholtal@embl.de>
