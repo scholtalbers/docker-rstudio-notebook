@@ -8,6 +8,18 @@ pkg.env$GX_HISTORY_ID <- Sys.getenv('GX_HISTORY_ID', unset=NA)
 pkg.env$GX_IMPORT_DIRECTORY <- Sys.getenv('GX_IMPORT_DIRECTORY', unset=NA)
 pkg.env$GX_TMP_DIRECTORY <- Sys.getenv('GX_TMP_DIRECTORY', unset=NA)
 
+# Check if curl dependency exists for jsonlite
+if(!require(curl)){
+	install.packages('curl')
+  library(curl)
+}
+
+# If jsonlite isn't installed then let's install it!
+if(!require(jsonlite)){
+  install.packages('jsonlite')
+  library(jsonlite)
+}
+
 #' gx_init
 #'
 #' Function that graps any environment/default settings to set for this session
@@ -18,6 +30,8 @@ pkg.env$GX_TMP_DIRECTORY <- Sys.getenv('GX_TMP_DIRECTORY', unset=NA)
 #' @param HISTORY_ID, the Galaxy history id to work on
 #' @param IMPORT_DIRECTORY, default '/tmp/<username>/galaxy_import'
 #' @param TMP_DIRECTORY, default '/tmp/<username>/galaxy_import/tmp'
+#'
+#' @export
 
 gx_init <- function(API_KEY=NULL, GALAXY_URL=NULL, HISTORY_ID=NULL,
                        IMPORT_DIRECTORY=NULL, TMP_DIRECTORY=NULL){
@@ -27,19 +41,20 @@ gx_init <- function(API_KEY=NULL, GALAXY_URL=NULL, HISTORY_ID=NULL,
     stop("You have not set your API Key")
   }
 
+  # Can the url checks be substituted for if(RCurl::url.exists(url))???
   if(!is.null(GALAXY_URL)){
-    pkg.env$GX_URL <- GALAXY_URL
+    if(substr(GALAXY_URL, start=nchar(GALAXY_URL), stop=nchar(GALAXY_URL)) != '/'){ # Does it have a slash at the end
+      pkg.env$GX_URL <- paste0(pkg.env$GX_URL, '/') # add a slash
+    } else if(substr(GALAXY_URL, start=0, stop=4) != 'http'){ # Does it have a protocol?
+      pkg.env$GX_URL <- paste0('http://', pkg.env$GX_URL) # add a protocol
+      message(cat("Galaxy url was not prepended by the protocol, I constructed this url:",pkg.env$GX_URL))
+    } else {
+      pkg.env$GX_URL <- GALAXY_URL
+    }
   } else if (is.null(GALAXY_URL) && is.na(pkg.env$GX_URL)){
       stop("You have not specified a Galaxy Url, please do so.")
   }
-  # horrible method to check for correct url construction, please fix
-  if ( str_sub(pkg.env$GX_URL,-1) != '/' ){
-    pkg.env$GX_URL <- paste0(pkg.env$GX_URL,'/')
-  }
-  if( str_sub(pkg.env$GX_URL,start=0,4) != 'http'){
-    pkg.env$GX_URL <- paste0('http://',pkg.env$GX_URL)
-    message(cat("Galaxy url was not prepended by the protocol, I constructed this url:",pkg.env$GX_URL))
-  }
+
 
   if(!is.null(HISTORY_ID)){
     pkg.env$GX_HISTORY_ID <- HISTORY_ID
@@ -72,6 +87,8 @@ check_url_and_key <- function(){
 #'
 #' @param directory, the directory to check
 #' @param create, directory if true
+#'
+#' @export
 
 directory_exists <- function(directory,create='FALSE'){
   # ensure directory exists
@@ -90,6 +107,8 @@ directory_exists <- function(directory,create='FALSE'){
 #' This function returns the import directory to work with
 #'
 #' @param create, if TRUE, create import directory if it does not exist
+#'
+#' @export
 
 gx_get_import_directory <- function(create=FALSE){
   if(is.na(pkg.env$GX_IMPORT_DIRECTORY)){
@@ -105,6 +124,8 @@ gx_get_import_directory <- function(create=FALSE){
 #'
 #' @param IMPORT_DIRECTORY, path to use as import directory, default /tmp/<username>/galaxy_import
 #' @param create, default FALSE. If TRUE, try to create the directory if it doesn't exist
+#'
+#' @export
 
 gx_set_import_directory <- function(IMPORT_DIRECTORY=NULL,create=FALSE){
   if(is.null(IMPORT_DIRECTORY)){
@@ -121,6 +142,8 @@ gx_set_import_directory <- function(IMPORT_DIRECTORY=NULL,create=FALSE){
 #' This function returns the tmp directory to work with
 #'
 #' @param create, if TRUE, create import directory if it does not exist
+#'
+#' @export
 
 gx_get_tmp_directory <- function(create=FALSE){
   if(is.na(pkg.env$GX_TMP_DIRECTORY)){
@@ -135,6 +158,8 @@ gx_get_tmp_directory <- function(create=FALSE){
 #'
 #' @param TMP_DIRECTORY, path to use as tmp directory, default $GX_IMPORT_DIRECTORY/tmp
 #' @param create, default FALSE. If TRUE, try to create the directory if it doesn't exist
+#'
+#' @export
 
 gx_set_tmp_directory <- function(TMP_DIRECTORY=NULL,create=FALSE){
   if(is.null(TMP_DIRECTORY)){
@@ -152,6 +177,8 @@ gx_set_tmp_directory <- function(TMP_DIRECTORY=NULL,create=FALSE){
 #' @param filepath, Path to file
 #' @param filename, Name of the file to display in Galaxy
 #' @param file_type, auto-detect otherwise
+#'
+#' @export
 
 gx_put <- function(filepath, filename='', file_type="auto"){
   check_url_and_key()
@@ -180,6 +207,8 @@ gx_put <- function(filepath, filename='', file_type="auto"){
 #' gx_list_history_datasets
 #'
 #' List datasets from the current history id
+#'
+#' @export
 
 gx_list_history_datasets <- function(){
   check_url_and_key()
@@ -194,6 +223,8 @@ gx_list_history_datasets <- function(){
 #' Show dataset info based
 #'
 #' @param dataset_encoded_id, the encoded dataset id which you can get from gx_list_history_datasets()
+#'
+#' @export
 
 gx_show_dataset <- function(dataset_encoded_id){
   check_url_and_key()
@@ -212,26 +243,129 @@ gx_show_dataset <- function(dataset_encoded_id){
 #' @param file_id, ID number
 #' @param create, if TRUE, create import directory if it does not exist
 #' @param force, if TRUE, will download the file even if it already exists locally
+#'
+#' @export
 
 gx_get <- function(file_id,create=FALSE,force=FALSE){
   check_url_and_key()
-  file_path = file.path(gx_get_import_directory(create=create), file_id)
-  if( !force && file.exists(file_path)){
-    message("You already downloaded this file, use force=TRUE to overwrite")
-    return(file_path)
-  }
   hist_datasets <- gx_list_history_datasets()
-  encoded_dataset_id <- hist_datasets[hist_datasets$hid==file_id,'id']
+
+  encoded_dataset_id <- hist_datasets[hist_datasets$hid==file_id,'id'] # Let's get some info about the data!
+  name <- hist_datasets[hist_datasets$hid==file_id, 'name']
+  hid <- hist_datasets[hist_datasets$hid==file_id, 'hid']
+
+  if(!dir.exists(file.path(gx_get_import_directory(create=create), hid))){ # If the directory doesn't exist then we download!
+    if(0 < file_id && file_id <= nrow(hist_datasets)){
+      data_type <- hist_datasets[hist_datasets$hid == file_id, 'type'] # Check if it's a collection or not
+
+      if(data_type == 'collection'){
+        return(gx_get_collection(file_id, hist_datasets)) # get_collection calls gx_download_file which returns a file path
+      } else {
+        file_path <- file.path(gx_get_import_directory(create=create), hid, name)
+        file_dir <- file.path(gx_get_import_directory(), hid)
+
+        if(!dir.exists(file_dir)) { dir.create(file_dir) }
+
+        gx_download_file(encoded_dataset_id, file_path, force)# gx_download_file returns a file path
+        return(file_path)
+      }
+    } else {
+      message(paste0("dataset #", file_id, " does not exist, please try again"))
+    }
+  } else {
+    return(file.path(gx_get_import_directory(), hid, "null_name")) # use null_name because Pavian calls using dirname()
+  }
+}
+
+#' gx_get_collection
+#'
+#' Correctly download the collection data into directories similar to gx_get()
+#' gx_get is the parent call, in gx_get is where file_id is detemined to be a collection or not
+#' If the file_id is a collection then this function will be called.
+#'
+#' @param file_id, ID number
+#' @param hist_datasets, table of all dataset info
+#' @param create, if TRUE, create import directory if it does not exist
+#' @param force, if TRUE, will download the file even if it already exists locally
+#'
+
+gx_get_collection <- function(file_id, hist_datasets, create=FALSE, force=FALSE){
+
+  file_dir <- file.path(gx_get_import_directory(), file_id) # Download directory
+  if(!dir.exists(file_dir)) { dir.create(file_dir) } # Does the dir exist? No then let's make it!
+
+  verified <- gx_verify_collection(file_id, hist_datasets)
+
+  if(verified > -1){
+    for(pos in seq(verified, file_id-1)){ # We do -1 so we don't include the collection
+      encoded_dataset_id <- hist_datasets[hist_datasets$hid==pos,'id']
+      name <- hist_datasets[hist_datasets$hid==pos, 'name']
+
+      file_path <- file.path(gx_get_import_directory(create=create), file_id, name)
+
+      gx_download_file(encoded_dataset_id, file_path, force) # This is returned on last iteration
+
+    }
+
+    return(file_path)
+  } else {
+    message("The data from this collection doesn't exist outside of the collection in this history") # Need to look into this!
+    message("Please copy data into history first, then create a collection")
+
+    return(NULL)
+  }
+}
+
+#' gx_verify_collection
+#'
+#' @param file_d, ID number
+#' @param hist_datasets, Datasets from Galaxy history
+
+gx_verify_collection <- function(file_id, hist_datasets){
+
+  is_populdated <- hist_datasets[hist_datasets$hid == file_id, 'populated']
+
+  if(is_populdated){
+    count <- count <- hist_datasets[hist_datasets$hid == file_id, 'element_count'] # grab the # of elements the collection contains
+    start_pos <- file_id - count # Get the first position of the collection's data
+
+    if(start_pos > 0){ # Is it positive? yes, that means some data exists
+      # Now we need to check if the data is actually the data we think it is, how can we do this?
+      #   gx_list_history_datasets() doesn't give us any of this information
+      # Even if the collection exists last, we need its data to actually exist in the history, being hidden or visible.
+      return(start_pos)
+    } else { # No data exists before this collection
+      return(-1)
+    }
+  }
+}
+
+#' gx_download_file
+#'
+#' Download a file from
+#'
+#' @param encoded_dataset_id, the data's encoded IDs
+#' @param file_path, path to download to
+#' @param force, force the download?
+#'
+
+gx_download_file <- function(encoded_dataset_id, file_path, force){
   dataset_details <- gx_show_dataset(encoded_dataset_id)
 
-  if( dataset_details$state == 'ok' ){
+  if(!force && file.exists(file_path)){
+    message("You already downloaded this file, use force=TRUE to overwrite")
+  }
+
+  if(dataset_details$state == 'ok' ){
     url <- paste0(
       pkg.env$GX_URL,'api/histories/',pkg.env$GX_HISTORY_ID,
       '/contents/',encoded_dataset_id,'/display',
       '?to_ext=',dataset_details$extension,
       '&key=',pkg.env$GX_API_KEY)
-    download.file(url,file_path,quiet=TRUE)
+
+    download.file(url, file_path, quiet=TRUE) # Download the file
   }
+
   return(file_path)
 }
 
@@ -241,6 +375,8 @@ gx_get <- function(file_id,create=FALSE,force=FALSE){
 #' Save the notebook .RData and .RHistory to Galaxy. Convenience function which wraps save.image and gx_put
 #'
 #' @param session_name, default "workspace"
+#'
+#' @export
 
 gx_save <- function(session_name="workspace"){
   check_url_and_key()
@@ -260,6 +396,8 @@ gx_save <- function(session_name="workspace"){
 #'
 #' @param rdata_id, .RData ID number
 #' @param rhistory_id, .RHistory ID number
+#'
+#' @export
 
 gx_restore <- function(rdata_id,rhistory_id){
   check_url_and_key()
@@ -272,6 +410,8 @@ gx_restore <- function(rdata_id,rhistory_id){
 #' gx_latest_history
 #'
 #' Uses the Galaxy API histories/most_recently_used to get the last updated history
+#'
+#' @export
 
 gx_latest_history <- function(){
   check_url_and_key()
@@ -286,6 +426,8 @@ gx_latest_history <- function(){
 #' Convenience method to set the current history id in the environment setting
 #'
 #' @param HISTORY_ID, the Galaxy history id to work on
+#'
+#' @export
 
 gx_switch_history <- function(HISTORY_ID){
   check_url_and_key()
@@ -298,6 +440,8 @@ gx_switch_history <- function(HISTORY_ID){
 #' Show the name of the current history
 #'
 #' @param full, if True, return a list with some history details
+#'
+#' @export
 
 gx_current_history <- function(full=FALSE){
   check_url_and_key()
@@ -312,6 +456,8 @@ gx_current_history <- function(full=FALSE){
 #' gx_list_histories
 #'
 #' List all Galaxy histories of the current user
+#'
+#' @export
 
 gx_list_histories <- function(){
   check_url_and_key()
