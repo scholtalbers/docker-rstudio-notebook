@@ -3,7 +3,7 @@
 pkg.env <- new.env()
 
 pkg.env$GX_API_KEY <- Sys.getenv('GX_API_KEY', unset=NA)
-pkg.env$GX_URL <- Sys.getenv('GX_URL', unset=NA)
+pkg.env$GX_GALAXY_URL <- Sys.getenv('GX_GALAXY_URL', unset=NA)
 pkg.env$GX_HISTORY_ID <- Sys.getenv('GX_HISTORY_ID', unset=NA)
 pkg.env$GX_IMPORT_DIRECTORY <- Sys.getenv('GX_IMPORT_DIRECTORY', unset=NA)
 pkg.env$GX_TMP_DIRECTORY <- Sys.getenv('GX_TMP_DIRECTORY', unset=NA)
@@ -44,12 +44,12 @@ gx_init <- function(API_KEY=NULL, GALAXY_URL=NULL, HISTORY_ID=NULL,
   # Can the url checks be substituted for if(RCurl::url.exists(url))???
   if(!is.null(GALAXY_URL)){
     if(substr(GALAXY_URL, start=nchar(GALAXY_URL), stop=nchar(GALAXY_URL)) != '/'){ # Does it have a slash at the end
-      pkg.env$GX_URL <- paste0(pkg.env$GX_URL, '/') # add a slash
+      pkg.env$GX_GALAXY_URL <- paste0(pkg.env$GX_GALAXY_URL, '/') # add a slash
     } else if(substr(GALAXY_URL, start=0, stop=4) != 'http'){ # Does it have a protocol?
-      pkg.env$GX_URL <- paste0('http://', pkg.env$GX_URL) # add a protocol
-      message(cat("Galaxy url was not prepended by the protocol, I constructed this url:",pkg.env$GX_URL))
+      pkg.env$GX_GALAXY_URL <- paste0('http://', pkg.env$GX_GALAXY_URL) # add a protocol
+      message(cat("Galaxy url was not prepended by the protocol, I constructed this url:",pkg.env$GX_GALAXY_URL))
     } else {
-      pkg.env$GX_URL <- GALAXY_URL
+      pkg.env$GX_GALAXY_URL <- GALAXY_URL
     }
   } else if (is.null(GALAXY_URL) && is.na(pkg.env$GX_URL)){
       stop("You have not specified a Galaxy Url, please do so.")
@@ -70,10 +70,10 @@ gx_init <- function(API_KEY=NULL, GALAXY_URL=NULL, HISTORY_ID=NULL,
 }
 
 check_url_and_key <- function(){
-  if(is.na(pkg.env$GX_URL) && is.na(pkg.env$GX_API_KEY)){
+  if(is.na(pkg.env$GX_GALAXY_URL) && is.na(pkg.env$GX_API_KEY)){
     stop("Please run gx_init(KEY,URL) to set your Galaxy API KEY and the Galaxy URL")
   }
-  if(is.na(pkg.env$GX_URL)){
+  if(is.na(pkg.env$GX_GALAXY_URL)){
     stop("Please run gx_init(GALAXY_URL=URL) to set the Galaxy URL")
   }
   if(is.na(pkg.env$GX_API_KEY)){
@@ -182,7 +182,7 @@ gx_set_tmp_directory <- function(TMP_DIRECTORY=NULL,create=FALSE){
 
 gx_put <- function(filepath, filename='', file_type="auto"){
   check_url_and_key()
-  url <- paste0(pkg.env$GX_URL,'api/tools?api_key=',pkg.env$GX_API_KEY)
+  url <- paste0(pkg.env$GX_GALAXY_URL,'api/tools?api_key=',pkg.env$GX_API_KEY)
 
   inputs_json <- sprintf(
     '{"files_0|NAME":"%s",
@@ -213,7 +213,7 @@ gx_put <- function(filepath, filename='', file_type="auto"){
 gx_list_history_datasets <- function(){
   check_url_and_key()
   hist_datasets <- fromJSON(
-    paste0(pkg.env$GX_URL,'api/histories/',pkg.env$GX_HISTORY_ID,'/contents?key=',pkg.env$GX_API_KEY)
+    paste0(pkg.env$GX_GALAXY_URL,'api/histories/',pkg.env$GX_HISTORY_ID,'/contents?key=',pkg.env$GX_API_KEY)
   )
   return(hist_datasets)
 }
@@ -229,7 +229,7 @@ gx_list_history_datasets <- function(){
 gx_show_dataset <- function(dataset_encoded_id){
   check_url_and_key()
   return(fromJSON(paste0(
-    pkg.env$GX_URL,
+    pkg.env$GX_GALAXY_URL,
     'api/datasets/',
     dataset_encoded_id,
     '?key=',pkg.env$GX_API_KEY
@@ -358,7 +358,7 @@ gx_download_file <- function(encoded_dataset_id, file_path, force){
 
   if(dataset_details$state == 'ok' ){
     url <- paste0(
-      pkg.env$GX_URL,'api/histories/',pkg.env$GX_HISTORY_ID,
+      pkg.env$GX_GALAXY_URL,'api/histories/',pkg.env$GX_HISTORY_ID,
       '/contents/',encoded_dataset_id,'/display',
       '?to_ext=',dataset_details$extension,
       '&key=',pkg.env$GX_API_KEY)
@@ -416,7 +416,7 @@ gx_restore <- function(rdata_id,rhistory_id){
 gx_latest_history <- function(){
   check_url_and_key()
   hist_obj <- fromJSON(
-      paste0(pkg.env$GX_URL,'api/histories/most_recently_used?key=',pkg.env$GX_API_KEY)
+      paste0(pkg.env$GX_GALAXY_URL,'api/histories/most_recently_used?key=',pkg.env$GX_API_KEY)
   )
   return(hist_obj)
 }
@@ -461,5 +461,5 @@ gx_current_history <- function(full=FALSE){
 
 gx_list_histories <- function(){
   check_url_and_key()
-  return( fromJSON(paste0(pkg.env$GX_URL,'api/histories?key=',pkg.env$GX_API_KEY) ))
+  return( fromJSON(paste0(pkg.env$GX_GALAXY_URL,'api/histories?key=',pkg.env$GX_API_KEY) ))
 }
