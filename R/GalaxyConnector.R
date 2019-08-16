@@ -212,9 +212,10 @@ gx_put <- function(filepath, filename='', file_type="auto"){
 
 gx_list_history_datasets <- function(){
   check_url_and_key()
-  hist_datasets <- fromJSON(
-    paste0(pkg.env$GX_GALAXY_URL,'api/histories/',pkg.env$GX_HISTORY_ID,'/contents?key=',pkg.env$GX_API_KEY)
-  )
+  url <- Sys.getenv("GX_GALAXY_URL")
+  history_id <- Sys.getenv("GX_HISTORY_ID")
+  api <- Sys.getenv("GX_API_KEY")
+  hist_datasets <- fromJSON(paste0(url,'api/histories/',history_id,'/contents?key=',api))
   return(hist_datasets)
 }
 
@@ -357,11 +358,14 @@ gx_download_file <- function(encoded_dataset_id, file_path, force){
   }
 
   if(dataset_details$state == 'ok' ){
+    gx_url <- Sys.getenv("GX_GALAXY_URL")
+    history_id <- Sys.getenv("GX_HISTORY_ID")
+    api <- Sys.getenv("GX_API_KEY")
     url <- paste0(
-      pkg.env$GX_GALAXY_URL,'api/histories/',pkg.env$GX_HISTORY_ID,
+      gx_url,'api/histories/',history_id,
       '/contents/',encoded_dataset_id,'/display',
       '?to_ext=',dataset_details$extension,
-      '&key=',pkg.env$GX_API_KEY)
+      '&key=',api)
 
     download.file(url, file_path, quiet=TRUE) # Download the file
   }
@@ -461,5 +465,7 @@ gx_current_history <- function(full=FALSE){
 
 gx_list_histories <- function(){
   check_url_and_key()
-  return( fromJSON(paste0(pkg.env$GX_GALAXY_URL,'api/histories?key=',pkg.env$GX_API_KEY) ))
+  url <- Sys.getenv("GX_GALAXY_URL")
+  api <- Sys.getenv("GX_API_KEY")
+  return( fromJSON(paste0(url,'api/histories?key=',api) ))
 }
