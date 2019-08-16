@@ -27,7 +27,7 @@ you can set the variables in your ~/.Renviron file.
 e.g.
 
     GX_API_KEY=digitsAndCharacters    # Your Galaxy API Key
-    GX_URL=http://usegalaxy.org       # The Galaxy instance url
+    GX_GALAXY_URL=http://usegalaxy.org       # The Galaxy instance url
     GX_HISTORY_ID=digitsAndCharacters # The Galaxy History ID
 
 Can set the environment variables using R commands:
