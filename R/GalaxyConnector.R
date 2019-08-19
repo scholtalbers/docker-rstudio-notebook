@@ -9,9 +9,9 @@ pkg.env$GX_IMPORT_DIRECTORY <- Sys.getenv('GX_IMPORT_DIRECTORY', unset=NA)
 pkg.env$GX_TMP_DIRECTORY <- Sys.getenv('GX_TMP_DIRECTORY', unset=NA)
 
 # Check if curl dependency exists for jsonlite
-if(!require(curl)){
-	install.packages('curl')
-  library(curl)
+if(!require(RCurl)){
+	install.packages('RCurl')
+  library(RCurl)
 }
 
 # If jsonlite isn't installed then let's install it!
@@ -215,7 +215,7 @@ gx_list_history_datasets <- function(){
   url <- Sys.getenv("GX_GALAXY_URL")
   history_id <- Sys.getenv("GX_HISTORY_ID")
   api <- Sys.getenv("GX_API_KEY")
-  hist_datasets <- fromJSON(paste0(url,'api/histories/',history_id,'/contents?key=',api))
+  hist_datasets <- jsonlite::fromJSON(paste0(url,'api/histories/',history_id,'/contents?key=',api))
   return(hist_datasets)
 }
 
@@ -229,7 +229,7 @@ gx_list_history_datasets <- function(){
 
 gx_show_dataset <- function(dataset_encoded_id){
   check_url_and_key()
-  return(fromJSON(paste0(
+  return(jsonlite::fromJSON(paste0(
     pkg.env$GX_GALAXY_URL,
     'api/datasets/',
     dataset_encoded_id,
@@ -467,5 +467,5 @@ gx_list_histories <- function(){
   check_url_and_key()
   url <- Sys.getenv("GX_GALAXY_URL")
   api <- Sys.getenv("GX_API_KEY")
-  return( fromJSON(paste0(url,'api/histories?key=',api) ))
+  return( jsonlite::fromJSON(paste0(url,'api/histories?key=',api) ))
 }
