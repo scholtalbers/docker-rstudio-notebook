@@ -1,12 +1,15 @@
 #' pkg.env
 #' private environment
-pkg.env <- new.env()
 
-pkg.env$GX_API_KEY <- Sys.getenv('GX_API_KEY', unset=NA)
-pkg.env$GX_GALAXY_URL <- Sys.getenv('GX_GALAXY_URL', unset=NA)
-pkg.env$GX_HISTORY_ID <- Sys.getenv('GX_HISTORY_ID', unset=NA)
-pkg.env$GX_IMPORT_DIRECTORY <- Sys.getenv('GX_IMPORT_DIRECTORY', unset=NA)
-pkg.env$GX_TMP_DIRECTORY <- Sys.getenv('GX_TMP_DIRECTORY', unset=NA)
+pkg.env <- new.env()
+.onLoad <- function(libname, pkgname) {
+  packageStartupMessage("Welcome, Galaxy Connect active.")
+  pkg.env$GX_API_KEY <- Sys.getenv('GX_API_KEY', unset=NA)
+  pkg.env$GX_GALAXY_URL <- Sys.getenv('GX_GALAXY_URL', unset=NA)
+  pkg.env$GX_HISTORY_ID <- Sys.getenv('GX_HISTORY_ID', unset=NA)
+  pkg.env$GX_IMPORT_DIRECTORY <- Sys.getenv('GX_IMPORT_DIRECTORY', unset=NA)
+  pkg.env$GX_TMP_DIRECTORY <- Sys.getenv('GX_TMP_DIRECTORY', unset=NA)
+}
 
 # Check if curl dependency exists for jsonlite
 if(!require(RCurl)){
@@ -42,6 +45,8 @@ gx_init <- function(API_KEY=NULL, GALAXY_URL=NULL, HISTORY_ID=NULL,
   }
 
   # Can the url checks be substituted for if(RCurl::url.exists(url))???
+  # This section assumes that galaxy.yml includes an http:// and a trailing slash on line 714
+  # eg. 192.168.1.1:8080 will fail, use http://192.168.1.1:8080/ instead
   if(!is.null(GALAXY_URL)){
     if(substr(GALAXY_URL, start=nchar(GALAXY_URL), stop=nchar(GALAXY_URL)) != '/'){ # Does it have a slash at the end
       pkg.env$GX_GALAXY_URL <- paste0(pkg.env$GX_GALAXY_URL, '/') # add a slash
@@ -51,7 +56,7 @@ gx_init <- function(API_KEY=NULL, GALAXY_URL=NULL, HISTORY_ID=NULL,
     } else {
       pkg.env$GX_GALAXY_URL <- GALAXY_URL
     }
-  } else if (is.null(GALAXY_URL) && is.na(pkg.env$GX_URL)){
+  } else if (is.null(GALAXY_URL) && is.na(pkg.env$GX_GALAXY_URL)){
       stop("You have not specified a Galaxy Url, please do so.")
   }
 
@@ -212,10 +217,11 @@ gx_put <- function(filepath, filename='', file_type="auto"){
 
 gx_list_history_datasets <- function(){
   check_url_and_key()
-  url <- Sys.getenv("GX_GALAXY_URL")
-  history_id <- Sys.getenv("GX_HISTORY_ID")
-  api <- Sys.getenv("GX_API_KEY")
-  hist_datasets <- jsonlite::fromJSON(paste0(url,'api/histories/',history_id,'/contents?key=',api))
+  hist_datasets <- jsonlite::fromJSON(paste0(pkg.env$GX_GALAXY_URL,
+                                             'api/histories/',
+                                             pkg.env$GX_HISTORY_ID,
+                                             '/contents?key=',
+                                             pkg.env$GX_API_KEY))
   return(hist_datasets)
 }
 
