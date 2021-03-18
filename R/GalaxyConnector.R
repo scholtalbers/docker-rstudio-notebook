@@ -168,7 +168,7 @@ gx_get_tmp_directory <- function(create=FALSE){
 
 gx_set_tmp_directory <- function(TMP_DIRECTORY=NULL,create=FALSE){
   if(is.null(TMP_DIRECTORY)){
-    TMP_DIRECTORY=file.path(gx_get_import_directory(create=create),"tmp")
+    TMP_DIRECTORY <- file.path(gx_get_import_directory(create=create), "tmp")
   }
   directory_exists(TMP_DIRECTORY,create=create)
   pkg.env$GX_TMP_DIRECTORY <- TMP_DIRECTORY
@@ -196,7 +196,7 @@ gx_put <- function(filepath, filename='', file_type="auto"){
     "file_type":"%s",
     "ajax_upload":"true"}',filename,file_type
   )
-  params=list(
+  params <- list(
       'files_0|file_data'=fileUpload(filepath),
       key=pkg.env$GX_API_KEY,
       tool_id='upload1',
@@ -330,9 +330,9 @@ gx_get_collection <- function(file_id, hist_datasets, create=FALSE, force=FALSE)
 
 gx_verify_collection <- function(file_id, hist_datasets){
 
-  is_populdated <- hist_datasets[hist_datasets$hid == file_id, 'populated']
+  is_populated <- hist_datasets[hist_datasets$hid == file_id, 'populated']
 
-  if(is_populdated){
+  if(is_populated){
     count <- count <- hist_datasets[hist_datasets$hid == file_id, 'element_count'] # grab the # of elements the collection contains
     start_pos <- file_id - count # Get the first position of the collection's data
 
@@ -364,9 +364,9 @@ gx_download_file <- function(encoded_dataset_id, file_path, force){
   }
 
   if(dataset_details$state == 'ok' ){
-    gx_url <- Sys.getenv("GX_GALAXY_URL")
-    history_id <- Sys.getenv("GX_HISTORY_ID")
-    api <- Sys.getenv("GX_API_KEY")
+    gx_url <- pkg.env$GX_GALAXY_URL
+    history_id <- pkg.env$GX_HISTORY_ID
+    api <- pkg.env$GX_API_KEY
     url <- paste0(
       gx_url,'api/histories/',history_id,
       '/contents/',encoded_dataset_id,'/display',
@@ -471,7 +471,7 @@ gx_current_history <- function(full=FALSE){
 
 gx_list_histories <- function(){
   check_url_and_key()
-  url <- Sys.getenv("GX_GALAXY_URL")
-  api <- Sys.getenv("GX_API_KEY")
+  url <- pkg.env$GX_GALAXY_URL
+  api <- pkg.env$GX_API_KEY
   return( jsonlite::fromJSON(paste0(url,'api/histories?key=',api) ))
 }
