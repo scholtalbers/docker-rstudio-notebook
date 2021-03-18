@@ -6,7 +6,6 @@ This package will allow you to interact with any Galaxy instance for which you
 have an API Key. You can retrieve and upload files from and to Galaxy and save 
 and restore your R Session in a Galaxy history.
 
-I've added the ability to get a collection from Galaxy.
 
 ## Install ##
 
@@ -73,7 +72,7 @@ the same keys as above in e.g. the RStudio's configuration
 
 ## Credits ##
 
-Strongly based off the work of [scholtalbers](https://github.com/scholtalbers/r-galaxy-connector)
+This is based on the work by Helena Rasche and Bjoern Gruening - see the fork origin:
+https://github.com/erasche/docker-rstudio-notebook
 
-Who based their fork on the work by Eric Rasche and Bjoern Gruening - see the fork 
-origin: https://github.com/erasche/docker-rstudio-notebook
+Merged forks from Justin Band and others - please see the commit history.
