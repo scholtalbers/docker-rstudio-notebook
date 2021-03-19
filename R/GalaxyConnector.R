@@ -3,12 +3,14 @@
 
 pkg.env <- new.env()
 .onLoad <- function(libname, pkgname) {
-  packageStartupMessage("Welcome, Galaxy Connect active.")
   pkg.env$GX_API_KEY <- Sys.getenv('GX_API_KEY', unset=NA)
   pkg.env$GX_GALAXY_URL <- Sys.getenv('GX_GALAXY_URL', unset=NA)
   pkg.env$GX_HISTORY_ID <- Sys.getenv('GX_HISTORY_ID', unset=NA)
   pkg.env$GX_IMPORT_DIRECTORY <- Sys.getenv('GX_IMPORT_DIRECTORY', unset=NA)
   pkg.env$GX_TMP_DIRECTORY <- Sys.getenv('GX_TMP_DIRECTORY', unset=NA)
+}
+.onAttach <- function(libname, pkgname){
+  packageStartupMessage("Welcome, Galaxy Connect active.")
 }
 
 # Check if curl dependency exists for jsonlite
@@ -74,7 +76,7 @@ gx_init <- function(API_KEY=NULL, GALAXY_URL=NULL, HISTORY_ID=NULL,
   gx_set_tmp_directory(TMP_DIRECTORY,create=TRUE)
 }
 
-check_url_and_key <- function(){
+.check_url_and_key <- function(){
   if(is.na(pkg.env$GX_GALAXY_URL) && is.na(pkg.env$GX_API_KEY)){
     stop("Please run gx_init(KEY,URL) to set your Galaxy API KEY and the Galaxy URL")
   }
@@ -186,7 +188,7 @@ gx_set_tmp_directory <- function(TMP_DIRECTORY=NULL,create=FALSE){
 #' @export
 
 gx_put <- function(filepath, filename='', file_type="auto"){
-  check_url_and_key()
+  .check_url_and_key()
   url <- paste0(pkg.env$GX_GALAXY_URL,'api/tools?api_key=',pkg.env$GX_API_KEY)
 
   inputs_json <- sprintf(
@@ -216,7 +218,7 @@ gx_put <- function(filepath, filename='', file_type="auto"){
 #' @export
 
 gx_list_history_datasets <- function(){
-  check_url_and_key()
+  .check_url_and_key()
   hist_datasets <- jsonlite::fromJSON(paste0(pkg.env$GX_GALAXY_URL,
                                              'api/histories/',
                                              pkg.env$GX_HISTORY_ID,
@@ -234,7 +236,7 @@ gx_list_history_datasets <- function(){
 #' @export
 
 gx_show_dataset <- function(dataset_encoded_id){
-  check_url_and_key()
+  .check_url_and_key()
   return(jsonlite::fromJSON(paste0(
     pkg.env$GX_GALAXY_URL,
     'api/datasets/',
@@ -254,7 +256,7 @@ gx_show_dataset <- function(dataset_encoded_id){
 #' @export
 
 gx_get <- function(file_id,create=FALSE,force=FALSE){
-  check_url_and_key()
+  .check_url_and_key()
   hist_datasets <- gx_list_history_datasets()
 
   encoded_dataset_id <- hist_datasets[hist_datasets$hid==file_id,'id'] # Let's get some info about the data!
@@ -325,7 +327,7 @@ gx_get_collection <- function(file_id, hist_datasets, create=FALSE, force=FALSE)
 
 #' gx_verify_collection
 #'
-#' @param file_d, ID number
+#' @param file_id, ID number
 #' @param hist_datasets, Datasets from Galaxy history
 
 gx_verify_collection <- function(file_id, hist_datasets){
@@ -389,7 +391,7 @@ gx_download_file <- function(encoded_dataset_id, file_path, force){
 #' @export
 
 gx_save <- function(session_name="workspace"){
-  check_url_and_key()
+  .check_url_and_key()
   tmp_dir <- gx_get_tmp_directory()
   workspace <- file.path(tmp_dir,paste0(session_name,".RData"))
   hist <- file.path(tmp_dir,paste0(session_name,".RHistory"))
@@ -410,7 +412,7 @@ gx_save <- function(session_name="workspace"){
 #' @export
 
 gx_restore <- function(rdata_id,rhistory_id){
-  check_url_and_key()
+  .check_url_and_key()
   rdata <- gx_get(rdata_id)
   rhistory <- gx_get(rhistory_id)
   load(rdata,envir=.GlobalEnv)
@@ -424,7 +426,7 @@ gx_restore <- function(rdata_id,rhistory_id){
 #' @export
 
 gx_latest_history <- function(){
-  check_url_and_key()
+  .check_url_and_key()
   hist_obj <- fromJSON(
       paste0(pkg.env$GX_GALAXY_URL,'api/histories/most_recently_used?key=',pkg.env$GX_API_KEY)
   )
@@ -440,7 +442,7 @@ gx_latest_history <- function(){
 #' @export
 
 gx_switch_history <- function(HISTORY_ID){
-  check_url_and_key()
+  .check_url_and_key()
   pkg.env$GX_HISTORY_ID <- HISTORY_ID
   gx_set_tmp_directory(create=TRUE)
 }
@@ -454,7 +456,7 @@ gx_switch_history <- function(HISTORY_ID){
 #' @export
 
 gx_current_history <- function(full=FALSE){
-  check_url_and_key()
+  .check_url_and_key()
   histories <- gx_list_histories()
   if (full){
     return(histories[histories$id==pkg.env$GX_HISTORY_ID,])
@@ -470,7 +472,7 @@ gx_current_history <- function(full=FALSE){
 #' @export
 
 gx_list_histories <- function(){
-  check_url_and_key()
+  .check_url_and_key()
   url <- pkg.env$GX_GALAXY_URL
   api <- pkg.env$GX_API_KEY
   return( jsonlite::fromJSON(paste0(url,'api/histories?key=',api) ))

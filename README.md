@@ -9,10 +9,11 @@ and restore your R Session in a Galaxy history.
 
 ## Install ##
 
-To install, first download the GalaxyConnector .tar.gz release and install through `install.packages('GalaxyConnector_0.3.tar.gz',type='source',
-repos=NULL)`.
+To install, use
 
-You may need to install some missing dependencies manually.
+    library(devtools)
+    install_github("scholtalbers/r-galaxy-connector")
+
 
 ## End user ##
 
@@ -25,19 +26,19 @@ you can set the variables in your ~/.Renviron file.
 
 e.g.
 
-    GX_API_KEY=digitsAndCharacters    # Your Galaxy API Key
-    GX_GALAXY_URL=http://usegalaxy.org       # The Galaxy instance url
-    GX_HISTORY_ID=digitsAndCharacters # The Galaxy History ID
+    GX_API_KEY=digitsAndCharacters        # Your Galaxy API Key
+    GX_GALAXY_URL=http://usegalaxy.org    # The Galaxy instance url
+    GX_HISTORY_ID=digitsAndCharacters     # The Galaxy History ID
 
 Can set the environment variables using R commands:
 
-    Sys.setenv("GX_API_KEY" = 'your_Galaxy_API_key') # Your Galaxy API Key
+    Sys.setenv("GX_API_KEY" = 'your_Galaxy_API_key')
     Sys.setenv("GX_GALAXY_URL" = 'the_galaxy_url')
     Sys.setenv("GX_HISTORY_ID" = 'your_history_id')
 
 ### Initialization ###
 
-Use gx_init() to setup the **current session** only (see below for more information).
+Use `gx_init()` to setup the **current session** only (see below for more information).
 
 You can find the API key under user preference in the Galaxy instance.
 
@@ -75,4 +76,4 @@ the same keys as above in e.g. the RStudio's configuration
 This is based on the work by Helena Rasche and Bjoern Gruening - see the fork origin:
 https://github.com/erasche/docker-rstudio-notebook
 
-Merged forks from Justin Band and others - please see the commit history.
+Merged forks from Justin Band, Adrian Zetner and others - please see the commit history.

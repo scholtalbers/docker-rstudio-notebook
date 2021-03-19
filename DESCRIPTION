@@ -1,13 +1,15 @@
 Package: GalaxyConnector
 Type: Package
-Title: Provides Galaxy Upload/Download
-Version: 0.3.3
-Date: 2015-09-28
+Title: Provides Galaxy Upload/Download functionality
+Version: 0.3.4
+Date: 2020-03-19
 Author: Jelle Scholtalbers
 Maintainer: Adrian Zetner <adrian.zetner@canada.ca>, Jelle Scholtalbers <scholtal@embl.de>
 Description: Provides functions to interact with a Galaxy instance, e.g. get or put datasets from and to Galaxy.
-  Based on the work by Eric Rasche and Björn Gruening.
-License: GPL (>= 2)
+  Based on the work by Helena Rasche and Björn Gruening.
+Encoding: UTF-8
+License: MIT + file LICENSE
 LazyData: TRUE
 Imports: stringr, RCurl, jsonlite
 Depends: R (>= 3.2)
+RoxygenNote: 7.1.0
